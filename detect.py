@@ -27,7 +27,7 @@ Usage - formats:
                                  yolov5s_edgetpu.tflite     # TensorFlow Edge TPU
                                  yolov5s_paddle_model       # PaddlePaddle
 """
-
+import time
 import argparse
 import os
 import platform
@@ -170,9 +170,13 @@ def run(
                     if save_img or save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
+                        box_location = f"{xyxy[0].item():.0f}, {xyxy[1].item():.0f}, {xyxy[2].item():.0f}, {xyxy[3].item():.0f}"  # 좌표 변수로 받기
+                        label = f"{label} [{box_location}]"
                         annotator.box_label(xyxy, label, color=colors(c, True))
+                       
                     if save_crop:
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
+                  ###다른곳에서 위치변수를 모듈로 가져오기위해서 추가함###
 
             # Stream results
             im0 = annotator.result()
@@ -214,6 +218,7 @@ def run(
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     if update:
         strip_optimizer(weights[0])  # update model (to fix SourceChangeWarning)
+
 
 
 def parse_opt():
