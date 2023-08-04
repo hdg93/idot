@@ -152,7 +152,7 @@ def export_torchscript(model, im, file, optimize, prefix=colorstr('TorchScript:'
 def export_onnx(model, im, file, opset, dynamic, simplify, prefix=colorstr('ONNX:')):
     # YOLOv5 ONNX export
     check_requirements('onnx>=1.12.0')
-    import onnx
+    
 
     LOGGER.info(f'\n{prefix} starting export with onnx {onnx.__version__}...')
     f = file.with_suffix('.onnx')
