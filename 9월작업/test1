@@ -1,0 +1,194 @@
+import cv2
+import numpy as np
+import sys
+
+
+img = cv2.imread('2.jpg')
+resized_img_1 = cv2.resize(img, dsize=(800,1200), interpolation=cv2.INTER_LINEAR)
+x,y,w,h = cv2.selectROI('img', resized_img_1, False)
+if w and h:
+    roi = resized_img_1[y:y+h, x:x+w]
+    cv2.imshow('cropped', roi)                   # ROI 지정 영역을 새창으로 표시
+    cv2.moveWindow('cropped', 0, 0)              # 새창을 화면 측 상단으로 이동
+    # cv2.imwrite('../CV2/img/cropped2.jpg', roi)  # ROI 영역만 파일로 저장
+    output_path = '.cropped2.jpg'
+
+# cv2.imwrite(output_path, roi)
+
+# 이미지 저장 후에 성공적으로 저장되었는지 확인
+if cv2.imwrite(output_path, roi):
+    print(f'Image saved to {output_path}')
+else:
+    print('Image save failed!')
+
+src = cv2.imread('.cropped2.jpg', cv2.IMREAD_GRAYSCALE)    
+if src is None:
+    print('Image load failed!')
+    sys.exit()
+    ###############opencv histogram stretching 이미지 향상#####################
+# cv2.normalize(src, dst, alpha=None, beta=None, norm_type=None, dtype=None, mask=None) -> dst
+
+# • src: 입력 영상
+# • dst: 결과 영상 (None 입력)
+# • alpha: (노름 정규화인 경우) 목표 노름 값, (원소 값 범위 정규화인 경우) 최솟값
+# • beta: (원소 값 범위 정규화인 경우) 최댓값
+# • norm_type: 정규화 타입. NORM_INF, NORM_L1, NORM_L2, NORM_MINMAX.
+#     히스토그램 스트레칭은 NORM_MINMAX
+# • dtype: 결과 영상의 타입
+# • mask: 마스크 영상
+gmin, gmax, _, _ = cv2.minMaxLoc(src)
+dst = cv2.normalize(src, None, 0, 255, cv2.NORM_MINMAX)
+dst = ((src - gmin) * 120. / (gmax - gmin)).astype(np.uint8)
+###################################################################################
+#############가우시안 필터링 -> 생략 #####################################
+# cv2.GaussianBlur(src, ksize, sigmaX, dst=None, sigmaY=None, borderType=None) -> dst
+
+# • src: 입력 영상. 각 채널 별로 처리됨.
+# • dst: 출력 영상. src와 같은 크기, 같은 타입.
+# • ksize: 가우시안 커널 크기. (0, 0)을 지정하면 sigma 값에 의해 자동 결정됨
+# • sigmaX: x방향 sigma.
+# • sigmaY: y방향 sigma. 0이면 sigmaX와 같게 설정.
+# • borderType: 가장자리 픽셀 확장 방식.
+
+# img2 = cv2.resize(dst, dsize=(0, 0), fx=2, fy=2)  # 이미지 확대
+
+# filter_img = cv2.GaussianBlur(dst, (0, 0), 1)
+# filter_img2 = cv2.GaussianBlur(dst, (0, 0), 3)
+
+# cv2.imshow("filter_img", filter_img)
+# cv2.imshow("filter_img2", filter_img2)
+#############################에지검출 생략#######################################################
+# roberts_x = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, 0]])
+# roberts_y = np.array([[0, 0, -1], [0, 1, 0], [0, 0, 0]])
+
+# prewitt_x = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+# prewitt_y = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]])
+
+# sobel_x = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+# sobel_y = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
+# ##################filter2D는 마스크를 적용하는 함수 
+# # 즉 그레이 스케일에 각각의 공식의 가로와 세로 공식에 맞게 적용하는 부분입니다.
+# ##  convertScaleAbs는 각각의 값을 절대값화시키고 정수화 시키는 작업. 이를 거쳐주어야 출력하였을 때 정상적인 이미지가 나옴
+# roberts_x = cv2.convertScaleAbs(cv2.filter2D(dst, -1, roberts_x))
+# roberts_y = cv2.convertScaleAbs(cv2.filter2D(dst, -1, roberts_y))
+
+# prewitt_x = cv2.convertScaleAbs(cv2.filter2D(dst, -1, prewitt_x))
+# prewitt_y = cv2.convertScaleAbs(cv2.filter2D(dst, -1, prewitt_y))
+
+# sobel_x = cv2.convertScaleAbs(cv2.filter2D(dst, -1, sobel_x))
+# sobel_y = cv2.convertScaleAbs(cv2.filter2D(dst, -1, sobel_y))
+# ####각각의 x와 y값을 하나의 이미지로 합침. 그를 위해 addWeighted함수를 사용
+# prewitt = cv2.addWeighted(prewitt_x, 1, prewitt_y, 1, 0)
+# roberts = cv2.addWeighted(roberts_x, 1, roberts_y, 1, 0)
+# sobel = cv2.addWeighted(sobel_x, 1, sobel_y, 1, 0)
+# #######################################################################################
+# # 전역 이진화 by Otsu's method
+# _, dst1 = cv2.threshold(dst, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+# # 지역 이진화 by Otsu's method
+# dst2 = np.zeros(dst.shape, np.uint8)  # 입력 영상과 같은 사이즈의 배경 생성
+
+# # 영상을 4x4, 총 16칸으로 나눔
+# bw = dst.shape[1] // 4  # dst.shape = (h, w, c), bw = w*(1/4)
+# bh = dst.shape[0] // 2  # bh = h*(1/4)
+
+# # 영상의 각 칸 별로 자동 이진화 실행
+# for y in range(4):
+#     for x in range(4):
+#         src_ = dst[y*bh:(y+1)*bh, x*bw:(x+1)*bw]
+#         dst_ = dst2[y*bh:(y+1)*bh, x*bw:(x+1)*bw]
+#         cv2.threshold(src_, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU, dst_)
+# ########################################################################################
+# 이미지 크기를 가져옵니다.
+height, width = src.shape
+print(height, width)
+################################################################################
+# # 가로 라인을 그릴 간격을 설정합니다.
+# horizontal_spacing = 65  # 라인 간격
+# # 가로 라인을 그립니다.
+# for y in range(0, height, horizontal_spacing):
+#     cv2.line(src, (0, y), (width, y), (0, 0, 255), 2)  #  라인을 그립니다.
+# # 세로 라인을 그릴 간격을 설정합니다.
+# vertical_spacing = 22  # 라인 간격
+
+# # 세로 라인을 그립니다.
+# for x in range(0, width, vertical_spacing):
+#     cv2.line(src, (x, 0), (x, height), (0, 0, 255), 2)  #  라인을 그립니다.
+#######################################################################################
+# 각 직사각형의 가로와 세로 크기를 설정합니다.
+rect_width = 22  # 직사각형 가로 크기
+rect_height = 65  # 직사각형 세로 크기
+
+# 직사각형으로 나눈 이미지를 저장할 빈 리스트를 생성합니다.
+rect_images = []
+
+# 이미지를 직사각형으로 나눕니다.
+for y in range(0, height, rect_height):
+    for x in range(0, width, rect_width):
+        # 직사각형으로 나눈 이미지를 잘라냅니다.
+        rect = src[y:y+rect_height, x:x+rect_width]
+        
+        # 이미지 크기가 충분한 경우에만 리스트에 추가합니다.
+        if rect.shape[0] == rect_height and rect.shape[1] == rect_width:
+            rect_images.append(rect)
+for i, rect in enumerate(rect_images):
+    cv2.imshow(f'Rectangle {i}', rect)
+    
+
+
+# 패턴 인식을 위한 함수 (예제: 각 작은 이미지의 평균 밝기 확인)
+def recognize_pattern(rect):
+    # 각 작은 이미지의 평균 밝기를 계산합니다.
+    mean_brightness = np.mean(rect)
+    
+    # 패턴을 인식하려면 적절한 조건을 설정하세요.
+    if mean_brightness > 100:  # 예제: 평균 밝기가 100보다 크면 패턴으로 인식
+        return 1  # 패턴이 있는 경우
+    else:
+        return 0  # 패턴이 없는 경우
+
+# 3x2 행렬의 결과를 저장할 리스트를 생성합니다.
+matrix_result = []
+
+# 각 작은 이미지에 대해 패턴을 인식하고 결과를 matrix_result에 추가합니다.
+for rect in rect_images:
+    result = recognize_pattern(rect)
+    matrix_result.append(result)
+
+# 나눈 이미지의 개수를 계산합니다.
+num_images = len(matrix_result)
+
+# 부족한 이미지를 무시하여 3x2 행렬로 변환합니다.
+if num_images >= 12:
+    matrix_result = np.array(matrix_result[:12]).reshape(3, 2)
+else:
+    # 부족한 부분은 0으로 채웁니다.
+    matrix_result.extend([0] * (12 - num_images))
+    matrix_result = np.array(matrix_result).reshape(3, 2)
+
+# 결과를 저장할 파일 경로
+output_file = 'matrix_result.txt'
+
+# 결과를 파일에 저장 (추가)
+with open(output_file, 'a') as file:
+    for row in matrix_result:
+        file.write(' '.join(map(str, row)) + '\n')
+
+# 파일을 읽어와서 행렬 형태로 출력
+with open('matrix_result.txt', 'r') as file:
+    lines = file.read().splitlines()
+    matrix_result = [list(map(int, line.split())) for line in lines]
+matrix_result = np.array(matrix_result)
+print(matrix_result)            
+# 결과 출력
+print(f'Results saved to {output_file}')
+
+cv2.imshow('src', src)
+# cv2.imshow('cropped2.jpg', resized_img_1)
+# cv2.imshow('src', src)
+# cv2.imshow('dst', dst)
+# cv2.imshow('roberts', roberts)
+# cv2.imshow('prewitt', prewitt)
+# cv2.imshow('sobel', sobel)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
