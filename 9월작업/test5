@@ -1,0 +1,65 @@
+import cv2
+import numpy as np
+import sys
+import os
+
+img = cv2.imread('cropped2.jpg')
+output_path = 'cropped2.jpg'
+
+src = cv2.imread('cropped2.jpg', cv2.IMREAD_GRAYSCALE)
+if src is None:
+    print('Image load failed!')
+    sys.exit()
+# 이미지를 그레이 스케일로 저장
+cv2.imwrite('cropped2_gray.jpg', src)
+
+gmin, gmax, _, _ = cv2.minMaxLoc(src)
+dst = cv2.normalize(src, None, 0, 255, cv2.NORM_MINMAX)
+dst = ((src - gmin) * 120. / (gmax - gmin)).astype(np.uint8)
+
+height, width = src.shape
+print(height, width)
+
+rect_width = 22
+rect_height = 65
+
+rect_images = []
+
+for y in range(0, height, rect_height):
+    for x in range(0, width, rect_width):
+        rect = src[y:y+rect_height, x:x+rect_width]
+            
+        if rect.shape[0] == rect_height and rect.shape[1] == rect_width:
+                rect_images.append(rect)
+            
+    # 이미지를 직사각형으로 나눈 이미지를 저장할 디렉토리를 만듭니다.
+if not os.path.exists('rect_images'):
+    os.makedirs('rect_images')
+
+    # 각각의 직사각형 이미지에 대한 정보를 파일로 저장합니다.
+for i, rect in enumerate(rect_images):
+    filename = f'rect_images/rectangle_{i}.jpg'  # 파일 이름을 경로와 함께 설정
+
+        # 직사각형 이미지에 경계선 그리기.
+    horizontal_spacing = height // 3
+    vertical_spacing = width // 2
+
+        # 가로 방향 라인 그리기
+    for y_line in [height // 3, height * 2 // 3]:
+        cv2.line(rect, (0, y_line), (rect_width - 1, y_line), (0, 0, 255), 2)
+
+        # 세로 방향 라인 그리기
+    center_x = rect_width // 2  # 이미지 중앙의 x 좌표
+    cv2.line(rect, (center_x, 0), (center_x, rect_height - 1), (0, 0, 255), 2)
+
+    cv2.imwrite(filename, rect, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
+    with open(f'rect_images/rectangle_{i}_info.txt', 'w') as info_file:
+        info_file.write(f'Rectangle {i} - Pixel Values:\n{np.array(rect)}')
+    print(f'Rectangle {i} - Pixel Values:\n{np.array(rect)}')
+
+    # 이미지 표시
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
