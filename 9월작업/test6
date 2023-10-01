@@ -1,0 +1,58 @@
+import cv2
+import numpy as np
+import sys
+import os
+src = cv2.imread('C:/Users/ehdrm/yolov5/rect_images/rectangle_1.jpg',cv2.IMREAD_GRAYSCALE)
+rect_height, rect_width = src.shape
+# 6개의 행렬을 저장할 변수 초기화
+matrix_1_1 = np.zeros((rect_height // 3, rect_width // 2), dtype=np.uint8)
+matrix_1_2 = np.zeros((rect_height // 3, rect_width // 2), dtype=np.uint8)
+matrix_2_1 = np.zeros((rect_height // 3, rect_width // 2), dtype=np.uint8)
+matrix_2_2 = np.zeros((rect_height // 3, rect_width // 2), dtype=np.uint8)
+matrix_3_1 = np.zeros((rect_height // 3, rect_width // 2), dtype=np.uint8)
+matrix_3_2 = np.zeros((rect_height // 3, rect_width // 2), dtype=np.uint8)
+
+# 직사각형 이미지에서 데이터 추출
+matrix_1_1 = src[:rect_height // 3, :rect_width // 2]
+matrix_1_2 = src[:rect_height // 3, rect_width // 2:]
+
+matrix_2_1 = src[rect_height // 3:2 * rect_height // 3, :rect_width // 2]
+matrix_2_2 = src[rect_height // 3:2 * rect_height // 3, rect_width // 2:]
+
+matrix_3_1 = src[2 * rect_height // 3:, :rect_width // 2]
+matrix_3_2 = src[2 * rect_height // 3:, rect_width // 2:]
+###np.mean 평균값 추출하는 함수라고함##
+matrix_1_1_mean = np.mean(matrix_1_1)
+matrix_1_2_mean = np.mean(matrix_1_2)
+matrix_2_1_mean = np.mean(matrix_2_1)
+matrix_2_2_mean = np.mean(matrix_2_2)
+matrix_3_1_mean = np.mean(matrix_3_1)
+matrix_3_2_mean = np.mean(matrix_3_2)
+
+def recognize_pattern(mean_brightness):
+    # 패턴을 인식하려면 적절한 조건을 설정하세요.
+    if mean_brightness > 75:  # 예제: 평균 밝기가 75보다 크면 패턴으로 인식
+        return 1  # 패턴이 있는 경우
+    else:
+        return 0  # 패턴이 없는 경우
+# 결과 출력
+# print("Matrix 1x1:")
+# print(matrix_1_1)
+# print("\nMatrix 1x2:")
+# print(matrix_1_2)
+# print("\nMatrix 2x1:")
+# print(matrix_2_1)
+# print("\nMatrix 2x2:")
+# print(matrix_2_2)
+# print("\nMatrix 3x1:")
+# print(matrix_3_1)
+# print("\nMatrix 3x2:")
+# print(matrix_3_2)
+brille=[[recognize_pattern(matrix_1_1_mean),recognize_pattern(matrix_2_1_mean),recognize_pattern(matrix_3_1_mean),recognize_pattern(matrix_1_2_mean),recognize_pattern(matrix_2_2_mean),recognize_pattern(matrix_3_2_mean)]]
+# print("Matrix 1x1의 평균값:", recognize_pattern(matrix_1_1_mean))
+# print("Matrix 1x2의 평균값:", recognize_pattern(matrix_1_2_mean))
+# print("Matrix 2x1의 평균값:", recognize_pattern(matrix_2_1_mean))
+# print("Matrix 2x2의 평균값:", recognize_pattern(matrix_2_2_mean))
+# print("Matrix 3x1의 평균값:", recognize_pattern(matrix_3_1_mean))
+# print("Matrix 3x2의 평균값:", recognize_pattern(matrix_3_2_mean))
+print(brille)
